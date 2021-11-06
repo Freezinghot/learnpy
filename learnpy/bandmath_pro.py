@@ -111,9 +111,87 @@ def monthlyMean(tifFloder, saveFloder):
     print('{filename} deal end '.format(filename=outName))
     del calData
 
+
+def monthlyMax(tifFloder, saveFloder):
+    tifNameList = os.listdir(tifFloder)
+    array, nan, gt, proj = readTifAsArray(tifFloder+os.sep+tifNameList[0])
+    im_bands, im_height, im_width = array.shape
+
+    layerlist = np.empty((im_bands, im_height, im_width), dtype=np.float32)
+    for i in range(len(tifNameList)):
+        filename, txt = os.path.splitext(tifNameList[i])
+        if txt == '.tif':
+            tifPath = tifFloder + os.sep + tifNameList[i]
+            array = np.array(readTifAsArray(tifPath))[0]
+
+            if not layerlist.all():
+                #layerlist = np.array([layerlist, array])
+                layerlist = np.concatenate((layerlist,array), axis=0)
+
+    band,col,row = np.shape(layerlist)
+    pix = np.empty((band), dtype=np.float32)
+    pixmax = np.zeros((col,row))
+    for j in range(col):
+        for k in range(row):
+            pix = layerlist[:,j, k]
+            mark = []
+            for l in range(len(pix)):
+                #pl = round(pix[l], 4)
+                if (pix[l] == np.float32(nan)) or (pix[l] == 0.0):
+                    mark.append(l)
+            pix = np.delete(pix, mark)
+            if len(pix):        # 判断是否为空
+                pixmax[j, k] = np.max(pix)
+        print(str(round(j/col, 2)*100)+'% finished')
+    outName = saveFloder + os.sep + 'monthly_max.tif'
+    calData = writeTiff(pixmax, nan, gt, proj, outName)
+    print('{filename} deal end '.format(filename=outName))
+    del calData
+
+def monthlyDays(tifFloder, saveFloder):
+    tifNameList = os.listdir(tifFloder)
+    array, nan, gt, proj = readTifAsArray(tifFloder+os.sep+tifNameList[0])
+    im_bands, im_height, im_width = array.shape
+
+    layerlist = np.empty((im_bands, im_height, im_width), dtype=np.float32)
+    for i in range(len(tifNameList)):
+        filename, txt = os.path.splitext(tifNameList[i])
+        if txt == '.tif':
+            tifPath = tifFloder + os.sep + tifNameList[i]
+            array = np.array(readTifAsArray(tifPath))[0]
+
+            if not layerlist.all():
+                #layerlist = np.array([layerlist, array])
+                layerlist = np.concatenate((layerlist,array), axis=0)
+
+    band,col,row = np.shape(layerlist)
+    pix = np.empty((band), dtype=np.float32)
+    pixday = np.zeros((col,row))
+    for j in range(col):
+        for k in range(row):
+            pix = layerlist[:,j, k]
+            mark = []
+            for l in range(len(pix)):
+                #pl = round(pix[l], 4)
+                if (pix[l] == np.float32(nan)) or (pix[l] == 0.0):
+                    mark.append(l)
+            pix = np.delete(pix, mark)
+            if len(pix):        # 判断是否为空
+                pixday[j, k] = len(pix)
+        print(str(round(j/col, 2)*100)+'% finished')
+    outName = saveFloder + os.sep + 'monthly_days.tif'
+    calData = writeTiff(pixday, nan, gt, proj, outName)
+    print('{filename} deal end '.format(filename=outName))
+    del calData
+
+
 start = time.time()
 print("START")
-monthlyMean(r'E:\MODIS\MCD19A2\test\warp',
-               r'E:\MODIS\MCD19A2\test\mean')
+monthlyMean(r'E:\MODIS\MCD19A2\20210101_31\warp',
+               r'E:\MODIS\MCD19A2\20210101_31\bandmath')
+monthlyMax(r'E:\MODIS\MCD19A2\20210101_31\warp',
+               r'E:\MODIS\MCD19A2\20210101_31\bandmath')
+monthlyDays(r'E:\MODIS\MCD19A2\20210101_31\warp',
+               r'E:\MODIS\MCD19A2\20210101_31\bandmath')
 end = time.time()
 print('END. Spend time: {s} s'.format(s=end - start))
